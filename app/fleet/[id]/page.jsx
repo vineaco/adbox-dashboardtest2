@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { use, useState } from 'react';
 import { api, addDays, formatDateTime, formatDuration, formatRelative, todayIso } from '../../lib/api';
 import { Badge, Empty, ErrorState, Loading, Modal, Panel, Stat, useResource, useToast } from '../../components/ui';
@@ -16,6 +17,7 @@ const TABS = [
 ];
 
 export default function BoxDetailPage({ params }) {
+  const router = useRouter();
   const { id } = use(params);
   const [tab, setTab] = useState('schedule');
   const [previewDate, setPreviewDate] = useState(todayIso());
@@ -367,8 +369,22 @@ export default function BoxDetailPage({ params }) {
             <span className="mono">/etc/adbox/box.env</span> on the device. You must write the new key to that file and
             restart <span className="mono">adbox-agent</span>, or the box will stop syncing.
           </div>
-          <div className="form-actions">
-            <button className="btn danger" onClick={rotateKey}>
+          <div className="form-actions" style={{ justifyContent: 'space-between' }}>
+            <button
+              className="btn danger"
+              onClick={async () => {
+                if (!window.confirm(`Delete box "${box.name}" (${box.serialNumber}) completely? All associated delivery and telemetry logs will be removed.`)) return;
+                try {
+                  await api.deleteBox(id);
+                  router.push('/fleet');
+                } catch (err) {
+                  notify(err.message, true);
+                }
+              }}
+            >
+              Delete box
+            </button>
+            <button className="btn" onClick={rotateKey}>
               Rotate API key
             </button>
           </div>
