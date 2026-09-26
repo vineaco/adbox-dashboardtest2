@@ -38,6 +38,7 @@ export const api = {
 
   campaigns: (query = '') => call(`campaigns${query}`),
   campaign: (id) => call(`campaigns/${id}`),
+  campaignMetrics: (id, query = '') => call(`campaigns/${id}/metrics${query}`),
   createCampaign: (body) => call('campaigns', { method: 'POST', body }),
   updateCampaign: (id, body) => call(`campaigns/${id}`, { method: 'PATCH', body }),
   deleteCampaign: (id) => call(`campaigns/${id}`, { method: 'DELETE' }),

@@ -37,6 +37,16 @@ export default function BoundariesPage() {
     }
   }
 
+  async function saveTraffic(boundary, value) {
+    try {
+      await api.updateBoundary(boundary.id, { avgDailyTraffic: value === '' ? null : Number(value) });
+      notify('Average daily traffic updated.');
+      reload();
+    } catch (updateError) {
+      notify(updateError.message, true);
+    }
+  }
+
   return (
     <>
       <header className="page-head">
@@ -66,7 +76,7 @@ export default function BoundariesPage() {
             <BoundaryEditor existing={data.boundaries} onSave={create} />
           </Panel>
 
-          <Panel eyebrow="Saved" title={`${data.boundaries.length} boundary(s)`}>
+          <Panel eyebrow="Saved" title={`${data.boundaries.length} boundary(s)`} description="Set an average daily traffic figure so campaign metrics can estimate impressions for this area.">
             {data.boundaries.length ? (
               <div className="table-wrap">
                 <table className="table">
@@ -75,6 +85,7 @@ export default function BoundariesPage() {
                       <th>Name</th>
                       <th>Type</th>
                       <th>Detail</th>
+                      <th>Avg daily traffic</th>
                       <th />
                     </tr>
                   </thead>
@@ -95,6 +106,21 @@ export default function BoundariesPage() {
                           {boundary.type === 'circle'
                             ? `${Math.round(boundary.radius)} m radius`
                             : `${boundary.points.length} points`}
+                        </td>
+                        <td>
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            placeholder="not set"
+                            defaultValue={boundary.avgDailyTraffic ?? ''}
+                            style={{ width: 110 }}
+                            onBlur={(event) => {
+                              const value = event.target.value;
+                              if (Number(value) === (boundary.avgDailyTraffic ?? '')) return;
+                              saveTraffic(boundary, value);
+                            }}
+                          />
                         </td>
                         <td>
                           <button className="btn tiny danger" onClick={() => remove(boundary)}>

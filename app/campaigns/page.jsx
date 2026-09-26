@@ -122,6 +122,9 @@ export default function CampaignsPage() {
                       <td className="numeric">{campaign.priority}</td>
                       <td>
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                          <Link className="btn tiny" href={`/campaigns/${campaign.id}/metrics`}>
+                            Metrics
+                          </Link>
                           <button className="btn tiny" onClick={() => toggleStatus(campaign)}>
                             {campaign.status === 'active' ? 'Pause' : 'Activate'}
                           </button>
