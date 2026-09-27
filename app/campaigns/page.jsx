@@ -39,9 +39,20 @@ export default function CampaignsPage() {
     }
   }
 
+  async function triggerSync(campaign) {
+    try {
+      const res = await api.triggerCampaignSync(campaign.id);
+      notify(res.message || `Sync triggered for "${campaign.name}". Boxes will collect changes.`);
+      reload();
+    } catch (syncError) {
+      notify(syncError.message, true);
+    }
+  }
+
   const allCampaigns = data?.campaigns || [];
   const activeCount = allCampaigns.filter((c) => c.status === 'active').length;
   const pausedCount = allCampaigns.filter((c) => c.status === 'paused').length;
+  const syncedCount = allCampaigns.filter((c) => c.sync?.isSynced).length;
   const boundaryCampaignsCount = allCampaigns.filter((c) => c.targetType === 'boundary').length;
   const targetedBoundariesCount = new Set(
     allCampaigns.flatMap((c) => (c.boundaries || []).map((b) => b.id))
@@ -103,9 +114,11 @@ export default function CampaignsPage() {
               attention={allCampaigns.length > 0 && activeCount === 0}
             />
             <Stat
-              label="Targeted zones"
-              value={targetedBoundariesCount}
-              note={`${boundaryCampaignsCount} boundary campaign(s)`}
+              label="Synced to boxes"
+              value={syncedCount}
+              unit={`/ ${activeCount}`}
+              note={syncedCount > 0 ? `${syncedCount} active synced today` : 'Pending box sync'}
+              attention={activeCount > 0 && syncedCount === 0}
             />
             <Stat
               label="Scheduled ads"
@@ -163,6 +176,7 @@ export default function CampaignsPage() {
                       <tr>
                         <th>Campaign</th>
                         <th>Status</th>
+                        <th>Sync</th>
                         <th>Runs</th>
                         <th>Dayparts</th>
                         <th>Target</th>
@@ -182,6 +196,33 @@ export default function CampaignsPage() {
                           </td>
                           <td>
                             <Badge state={campaign.status}>{campaign.status}</Badge>
+                          </td>
+                          <td>
+                            <button
+                              type="button"
+                              className={`pill-btn ${
+                                campaign.status !== 'active'
+                                  ? 'inactive'
+                                  : campaign.sync?.isSynced
+                                  ? 'synced'
+                                  : 'not-synced'
+                              }`}
+                              onClick={() => triggerSync(campaign)}
+                              title={
+                                campaign.status !== 'active'
+                                  ? `Campaign is ${campaign.status}. Click to force sync bump.`
+                                  : campaign.sync?.isSynced
+                                  ? `Synced to ${campaign.sync.syncedBoxesCount} screen(s) today. Click to trigger instant sync bump.`
+                                  : 'Not synced to any screen yet today. Click to trigger instant sync bump.'
+                              }
+                            >
+                              <i />{' '}
+                              {campaign.status !== 'active'
+                                ? 'Not synced'
+                                : campaign.sync?.isSynced
+                                ? `Synced (${campaign.sync.syncedBoxesCount})`
+                                : 'Not synced'}
+                            </button>
                           </td>
                           <td>
                             {campaign.startDate}

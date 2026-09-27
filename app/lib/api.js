@@ -41,6 +41,7 @@ export const api = {
   campaignMetrics: (id, query = '') => call(`campaigns/${id}/metrics${query}`),
   createCampaign: (body) => call('campaigns', { method: 'POST', body }),
   updateCampaign: (id, body) => call(`campaigns/${id}`, { method: 'PATCH', body }),
+  triggerCampaignSync: (id) => call(`campaigns/${id}/sync`, { method: 'POST' }),
   deleteCampaign: (id) => call(`campaigns/${id}`, { method: 'DELETE' }),
 
   boundaries: () => call('boundaries'),

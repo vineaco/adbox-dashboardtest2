@@ -104,6 +104,65 @@ nav a b { margin-left: auto; color: #6d8190; font-size: 11px; font-weight: 400; 
 .badge.bad, .badge.offline, .badge.failed, .badge.suspended, .badge.retired { background: #f8e6d9; color: var(--danger); }
 .badge.bad i, .badge.offline i, .badge.failed i, .badge.suspended i, .badge.retired i { background: #d17b58; }
 
+/* ---------- pill buttons ---------- */
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all .15s ease;
+  background: transparent;
+}
+.pill-btn i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  font-style: normal;
+}
+.pill-btn.synced {
+  background: #eafaf1;
+  color: #12804b;
+  border-color: #b7edd0;
+}
+.pill-btn.synced i {
+  background: #12804b;
+  box-shadow: 0 0 0 2px #d4f4e2;
+}
+.pill-btn.synced:hover {
+  background: #daf6e6;
+  border-color: #93e3b5;
+}
+.pill-btn.not-synced {
+  background: #fff8e6;
+  color: #a86c00;
+  border-color: #ffe08a;
+}
+.pill-btn.not-synced i {
+  background: #cfa257;
+  box-shadow: 0 0 0 2px #fff0c7;
+}
+.pill-btn.not-synced:hover {
+  background: #fff0c7;
+  border-color: #ffd45a;
+}
+.pill-btn.inactive {
+  background: #f1f4f6;
+  color: #7f92a6;
+  border-color: #dce4e8;
+}
+.pill-btn.inactive i {
+  background: #a4b3be;
+}
+.pill-btn.inactive:hover {
+  background: #e5ebef;
+}
+
 /* ---------- forms ---------- */
 .field { display: grid; gap: 6px; min-width: 0; color: #4f6478; font-size: 10px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; }
 .field input, .field select, .field textarea { width: 100%; padding: 10px 11px; border: 1px solid #d7e8ec; border-radius: 5px; background: #fff; color: #1f2c40; font-size: 12px; font-weight: 400; text-transform: none; letter-spacing: 0; }
