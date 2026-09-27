@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { use } from 'react';
 import { api } from '../../lib/api';
 import { ErrorState, Loading, useResource } from '../../components/ui';
+import { SkeletonCampaignWizard } from '../../components/Skeleton';
 import CampaignWizard from '../../components/CampaignWizard';
 
 export default function EditCampaignPage({ params }) {
@@ -26,7 +27,7 @@ export default function EditCampaignPage({ params }) {
     };
   }, [id]);
 
-  if (loading) return <Loading label="Loading campaign…" />;
+  if (loading) return <SkeletonCampaignWizard />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
   const { campaign } = data;

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { api, formatDateTime } from '../lib/api';
 import { Badge, Empty, ErrorState, Loading, Panel, useResource, useToast } from '../components/ui';
 import { Pagination, usePagination } from '../components/Pagination';
+import { SkeletonBoundaries } from '../components/Skeleton';
 import { RefreshIcon, SearchIcon, TrashIcon } from '../components/Icon';
 
 const BoundaryEditor = dynamic(() => import('../components/BoundaryEditor'), {
@@ -56,6 +57,9 @@ export default function BoundariesPage() {
   );
   const { page, setPage, totalPages, pageItems, start } = usePagination(filtered, 10);
 
+  if (loading) return <SkeletonBoundaries />;
+  if (error) return <ErrorState error={error} onRetry={reload} />;
+
   return (
     <>
       <header className="page-head">
@@ -71,9 +75,6 @@ export default function BoundariesPage() {
           <RefreshIcon /> Refresh
         </button>
       </header>
-
-      {loading && <Loading label="Loading boundaries…" />}
-      {error && <ErrorState error={error} onRetry={reload} />}
 
       {data && (
         <div className="grid two">

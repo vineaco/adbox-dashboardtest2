@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { api } from '../../lib/api';
 import { ErrorState, Loading, useResource } from '../../components/ui';
+import { SkeletonCampaignWizard } from '../../components/Skeleton';
 import CampaignWizard, { emptyDraft } from '../../components/CampaignWizard';
 
 export default function NewCampaignPage() {
@@ -21,7 +22,7 @@ export default function NewCampaignPage() {
     };
   });
 
-  if (loading) return <Loading label="Loading publisher…" />;
+  if (loading) return <SkeletonCampaignWizard />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
   return (

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { use, useState } from 'react';
 import { api, addDays, formatDateTime, formatDuration, formatRelative, todayIso } from '../../lib/api';
 import { Badge, Empty, ErrorState, Loading, Modal, Panel, Stat, useResource, useToast } from '../../components/ui';
+import { SkeletonFleetDetail, SkeletonTable } from '../../components/Skeleton';
 
 const FleetMap = dynamic(() => import('../../components/FleetMap'), { ssr: false, loading: () => <div className="map small" /> });
 
@@ -27,7 +28,7 @@ export default function BoxDetailPage({ params }) {
   const { loading, data, error, reload } = useResource(() => api.box(id), [id]);
   const preview = useResource(() => api.schedulePreview(id, `?serviceDate=${previewDate}`), [id, previewDate]);
 
-  if (loading) return <Loading label="Loading box…" />;
+  if (loading) return <SkeletonFleetDetail />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
   const { box, deliveries, latestSchedule, playbackEvents, errors, heartbeats } = data;
@@ -180,6 +181,7 @@ export default function BoxDetailPage({ params }) {
             eyebrow="Preview"
             title="What this box would receive"
             description="Resolved against its last known position — the same logic the device endpoint runs."
+            style={{ position: 'relative' }}
             actions={
               <label className="field">
                 Service date
@@ -187,7 +189,7 @@ export default function BoxDetailPage({ params }) {
               </label>
             }
           >
-            {preview.loading && <Loading label="Resolving…" />}
+            {preview.loading && <SkeletonTable rows={3} showOverlay overlayLabel="Resolving box playlist…" />}
             {preview.error && <ErrorState error={preview.error} onRetry={preview.reload} />}
             {preview.data && <SlotList schedule={preview.data} />}
           </Panel>

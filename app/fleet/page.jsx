@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { api, formatDateTime, formatRelative } from '../lib/api';
 import { Badge, Empty, ErrorState, Loading, Panel, useResource } from '../components/ui';
 import { Pagination, usePagination } from '../components/Pagination';
+import { SkeletonFleet } from '../components/Skeleton';
 import { PlusIcon, RefreshIcon, SearchIcon } from '../components/Icon';
 
 const STATUSES = ['all', 'active', 'suspended', 'retired'];
@@ -25,7 +26,7 @@ export default function FleetPage() {
   });
   const { page, setPage, totalPages, pageItems, start } = usePagination(boxes, 15);
 
-  if (loading) return <Loading label="Loading boxes…" />;
+  if (loading) return <SkeletonFleet />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
   return (

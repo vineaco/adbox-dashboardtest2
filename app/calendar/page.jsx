@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { api, formatDateTime, formatRelative, todayIso } from '../lib/api';
 import { Badge, Empty, ErrorState, Loading, Panel, Stat, useResource } from '../components/ui';
+import { SkeletonCalendar, SkeletonTable } from '../components/Skeleton';
 import {
   DAY_NAMES,
   campaignCycleSeconds,
@@ -50,7 +51,7 @@ export default function CalendarPage() {
     };
   }, [cursor]);
 
-  if (loading) return <Loading label="Loading calendar…" />;
+  if (loading) return <SkeletonCalendar />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
   const dayparts = (serviceDate) => daypartsOn(data.campaigns, serviceDate, { statuses });
@@ -224,8 +225,9 @@ export default function CalendarPage() {
                   title="Schedules collected by boxes"
                   description="Proof of what the fleet pulled for this date."
                   className="calendar-deliveries"
+                  style={{ position: 'relative' }}
                 >
-                  {deliveries.loading && <Loading label="Loading deliveries…" />}
+                  {deliveries.loading && <SkeletonTable rows={4} showOverlay overlayLabel="Loading deliveries…" />}
                   {deliveries.data?.deliveries?.length ? (
                     <div className="table-wrap">
                       <table className="table">

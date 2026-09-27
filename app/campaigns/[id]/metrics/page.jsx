@@ -5,6 +5,7 @@ import { use, useState } from 'react';
 import { api, addDays, formatDateTime, formatDuration, todayIso } from '../../../lib/api';
 import { Badge, Empty, ErrorState, Loading, Panel, Stat, useResource } from '../../../components/ui';
 import { Pagination, usePagination } from '../../../components/Pagination';
+import { SkeletonCampaignMetrics } from '../../../components/Skeleton';
 import { EditIcon, RefreshIcon, SearchIcon } from '../../../components/Icon';
 
 const STATUSES = ['all', 'played', 'skipped', 'failed'];
@@ -28,6 +29,9 @@ export default function CampaignMetricsPage({ params }) {
     return [event.boxName, event.boxSerial, event.mediaName].some((value) => value?.toLowerCase().includes(term));
   });
   const { page, setPage, totalPages, pageItems, start } = usePagination(filteredEvents, 20);
+
+  if (loading) return <SkeletonCampaignMetrics />;
+  if (error) return <ErrorState error={error} onRetry={reload} />;
 
   return (
     <>
@@ -61,9 +65,6 @@ export default function CampaignMetricsPage({ params }) {
           </label>
         </div>
       </Panel>
-
-      {loading && <Loading label="Loading campaign metrics…" />}
-      {error && <ErrorState error={error} onRetry={reload} />}
 
       {data && (
         <>

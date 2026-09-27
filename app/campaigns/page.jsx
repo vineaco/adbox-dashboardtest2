@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { api } from '../lib/api';
 import { Badge, Empty, ErrorState, Loading, Panel, useResource, useToast } from '../components/ui';
 import { Pagination, usePagination } from '../components/Pagination';
+import { SkeletonCampaigns } from '../components/Skeleton';
 import { ChartIcon, EditIcon, PauseIcon, PlayIcon, PlusIcon, RefreshIcon, SearchIcon, TrashIcon } from '../components/Icon';
 import { DAY_NAMES, campaignCycleSeconds, formatAirtime } from '../lib/airtime';
 
@@ -47,6 +48,9 @@ export default function CampaignsPage() {
   });
   const { page, setPage, totalPages, pageItems, start } = usePagination(filtered, 10);
 
+  if (loading) return <SkeletonCampaigns />;
+  if (error) return <ErrorState error={error} onRetry={reload} />;
+
   return (
     <>
       <header className="page-head">
@@ -70,9 +74,6 @@ export default function CampaignsPage() {
           </Link>
         </div>
       </header>
-
-      {loading && <Loading label="Loading campaigns…" />}
-      {error && <ErrorState error={error} onRetry={reload} />}
 
       {data &&
         (data.campaigns.length ? (

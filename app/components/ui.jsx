@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { AdboxLogoMark } from './AdboxLogo';
 
 export function Panel({ title, description, eyebrow, actions, children, className = '' }) {
   return (
@@ -45,18 +46,24 @@ export function Badge({ state, children }) {
 export function Empty({ icon = '◎', title, children }) {
   return (
     <div className="empty">
-      <i>{icon}</i>
+      <i>{icon === '◎' ? <AdboxLogoMark size={26} /> : icon}</i>
       <strong>{title}</strong>
       {children && <p>{children}</p>}
     </div>
   );
 }
 
-export function Loading({ label = 'Loading…' }) {
+export function Loading({ label = 'Loading…', compact = false }) {
   return (
-    <div className="state">
-      <span className="loader" />
-      {label}
+    <div className={`state card-loading-container ${compact ? 'compact' : ''}`} style={{ position: 'relative', overflow: 'hidden' }}>
+      <div className="card-loading-overlay">
+        <AdboxLogoMark size={compact ? 24 : 32} animated />
+        <span>{label}</span>
+      </div>
+      <div style={{ width: '100%', display: 'grid', gap: 10, opacity: 0.35 }}>
+        <div className="skeleton-shimmer" style={{ width: '50%', height: 16 }} />
+        <div className="skeleton-shimmer" style={{ width: '80%', height: 12 }} />
+      </div>
     </div>
   );
 }
@@ -85,7 +92,10 @@ export function Modal({ title, description, onClose, className = '', wide = fals
   return (
     <div className="modal-backdrop" onClick={(event) => event.target === event.currentTarget && onClose()}>
       <div className={`modal ${wide ? 'wide' : ''} ${className}`} role="dialog" aria-modal="true">
-        <h2>{title}</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <AdboxLogoMark size={22} />
+          <h2 style={{ margin: 0 }}>{title}</h2>
+        </div>
         {description && <p>{description}</p>}
         {children}
       </div>

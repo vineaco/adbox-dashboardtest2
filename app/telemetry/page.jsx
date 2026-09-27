@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { api, formatDateTime, formatDuration, formatRelative, todayIso } from '../lib/api';
 import { Badge, Empty, ErrorState, Loading, Panel, Stat, useResource } from '../components/ui';
+import { SkeletonTelemetry } from '../components/Skeleton';
 
 const TABS = [
   ['playback', 'Playback'],
@@ -27,6 +28,9 @@ export default function TelemetryPage() {
     [serviceDate]
   );
 
+  if (loading) return <SkeletonTelemetry />;
+  if (error) return <ErrorState error={error} onRetry={reload} />;
+
   return (
     <>
       <header className="page-head">
@@ -49,12 +53,7 @@ export default function TelemetryPage() {
         </div>
       </header>
 
-      {loading && <Loading label="Loading telemetry…" />}
-      {error && <ErrorState error={error} onRetry={reload} />}
-
-      {data && (
-        <>
-          <div className="grid four">
+      <div className="grid four">
             <Stat label="Plays recorded" value={data.playback.events.length} note={`on ${serviceDate}`} />
             <Stat label="Screen time" value={formatDuration(data.playback.totals.durationMs)} note="sum of played durations" />
             <Stat
@@ -211,8 +210,6 @@ export default function TelemetryPage() {
               )}
             </Panel>
           )}
-        </>
-      )}
     </>
   );
 }

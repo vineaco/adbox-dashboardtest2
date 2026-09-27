@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { api, formatDateTime, formatRelative } from '../lib/api';
 import { Badge, Empty, ErrorState, Loading, Modal, Panel, useResource, useToast } from '../components/ui';
+import { SkeletonTable } from '../components/Skeleton';
+import { AdboxLogoMark } from '../components/AdboxLogo';
 
 export default function ProvisioningPage() {
   const [form, setForm] = useState({ name: '', screenLabel: '', serialNumber: '', timezone: 'Africa/Lagos', ttlHours: 168, notes: '' });
@@ -47,7 +49,10 @@ export default function ProvisioningPage() {
       <header className="page-head">
         <div>
           <p className="eyebrow">Onboarding</p>
-          <h1>Provisioning</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <h1>Provisioning</h1>
+            <AdboxLogoMark size={26} />
+          </div>
           <p>
             A fresh Pi has no REGISTERED_BOX_NUMBER. Issue a single-use code here, hand it to the installer, and the
             device exchanges it for its box number and API key on first contact — over the internet or over Ethernet
@@ -127,8 +132,8 @@ sudo adbox-provision <PROVISIONING-CODE> --server http://192.168.1.50:8788`}</pr
         </Panel>
       </div>
 
-      <Panel eyebrow="Ledger" title="Issued codes" description="Revoke anything that was not used.">
-        {loading && <Loading label="Loading codes…" />}
+      <Panel eyebrow="Ledger" title="Issued codes" description="Revoke anything that was not used." style={{ position: 'relative' }}>
+        {loading && <SkeletonTable rows={4} showOverlay overlayLabel="Loading issued codes…" />}
         {error && <ErrorState error={error} onRetry={reload} />}
         {data &&
           (data.tokens.length ? (

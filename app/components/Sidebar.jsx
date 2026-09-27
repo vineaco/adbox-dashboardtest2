@@ -39,13 +39,10 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      <div className="brand">
-        <span className="brand-mark">A</span>
-        <span>
-          adbox
-          <small>fleet control</small>
-        </span>
-      </div>
+      <Link href="/" className="brand" title="adbox home">
+        <img src="/adbox-logo-dark.png" alt="adbox" className="sidebar-logo" />
+        <span className="brand-tag">fleet control</span>
+      </Link>
 
       <div className={`fleet-chip ${offline > 0 ? 'degraded' : ''}`}>
         <i />

@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { api, formatDateTime, formatRelative } from './lib/api';
 import { Badge, Empty, ErrorState, Loading, Panel, Stat, useResource } from './components/ui';
+import { SkeletonOverview } from './components/Skeleton';
 
 const FleetMap = dynamic(() => import('./components/FleetMap'), {
   ssr: false,
@@ -16,7 +17,7 @@ export default function OverviewPage() {
     return { overview, locations: locations.locations, boundaries: boundaries.boundaries };
   });
 
-  if (loading) return <Loading label="Loading fleet overview…" />;
+  if (loading) return <SkeletonOverview />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
 
   const { overview, locations, boundaries } = data;

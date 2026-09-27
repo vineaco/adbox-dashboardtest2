@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { api, formatBytes, formatDateTime } from '../lib/api';
 import { Badge, Empty, ErrorState, Loading, Panel, useResource, useToast } from '../components/ui';
 import { Pagination, usePagination } from '../components/Pagination';
+import { SkeletonMedia } from '../components/Skeleton';
 import { RefreshIcon, SearchIcon, TrashIcon, UploadIcon } from '../components/Icon';
 
 const TYPES = ['all', 'image', 'video'];
@@ -69,6 +70,9 @@ export default function MediaPage() {
   });
   const { page, setPage, totalPages, pageItems, start } = usePagination(filtered, 12);
 
+  if (loading) return <SkeletonMedia />;
+  if (error) return <ErrorState error={error} onRetry={reload} />;
+
   return (
     <>
       <header className="page-head">
@@ -99,8 +103,6 @@ export default function MediaPage() {
       </header>
 
       <Panel>
-        {loading && <Loading label="Loading media…" />}
-        {error && <ErrorState error={error} onRetry={reload} />}
         {data && (
           <>
             <div className="toolbar">
