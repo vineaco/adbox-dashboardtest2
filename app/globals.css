@@ -292,6 +292,40 @@ pre.code { max-height: 340px; overflow: auto; margin: 10px 0 0; padding: 13px; b
 .rotation-segment.booked { background: #ccd8e0; color: #26323d; }
 .rotation-segment.draft { background: #6fcbd8; color: #00343a; }
 
+/* ---------- target selection cards ---------- */
+.target-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 14px; margin-bottom: 18px; }
+.target-card { display: flex; flex-direction: column; align-items: flex-start; text-align: left; padding: 16px; border: 1.5px solid #d7e8ec; border-radius: 8px; background: #fff; cursor: pointer; transition: all .15s ease; }
+.target-card:hover { border-color: #6fcbd8; background: #f8fcfd; }
+.target-card.selected { border-color: #008d9f; background: #e6f6f8; box-shadow: 0 0 0 1px #008d9f; }
+.target-card-icon { font-size: 18px; margin-bottom: 6px; }
+.target-card strong { color: #1f2c40; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.target-card.selected strong { color: #00474f; }
+.target-card p { color: #7f92a6; font-size: 11px; line-height: 1.45; margin: 0; }
+
+.target-selected-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; border: 1px solid #d7e8ec; border-radius: 7px; background: #f8fcfd; margin-top: 12px; }
+.target-selected-summary strong { color: #00474f; font-size: 12px; }
+
+/* ---------- media guideline card ---------- */
+.media-guidelines { display: grid; gap: 8px; padding: 16px 18px; border: 1px solid #c9e8ef; border-radius: 8px; background: #f2fafc; margin-top: 18px; margin-bottom: 18px; }
+.media-guidelines-head { display: flex; align-items: center; gap: 8px; color: #00636f; font-weight: 700; font-size: 12px; }
+.media-guidelines-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 6px; }
+.media-guideline-item { display: grid; gap: 3px; font-size: 11px; color: #4f6478; }
+.media-guideline-item strong { color: #1f2c40; font-size: 11px; }
+
+/* ---------- picker modal items ---------- */
+.picker-modal-inner { display: flex; flex-direction: column; gap: 10px; }
+.picker-list { display: grid; gap: 6px; max-height: 380px; overflow-y: auto; padding-right: 4px; }
+.picker-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #d7e8ec; border-radius: 6px; background: #fff; cursor: pointer; transition: all .15s ease; }
+.picker-item:hover { border-color: #6fcbd8; background: #f8fcfd; }
+.picker-item.selected { border-color: #008d9f; background: #eef8fa; }
+.picker-item input[type=checkbox] { width: 16px; height: 16px; accent-color: #008d9f; cursor: pointer; }
+.picker-item-info { flex: 1; min-width: 0; display: grid; gap: 3px; text-align: left; }
+.picker-item-info strong { font-size: 12px; color: #1f2c40; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.picker-item-info small { font-size: 10px; color: #7f92a6; }
+.picker-badge { padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; text-transform: uppercase; background: #eaf3f6; color: #4f6478; letter-spacing: .5px; }
+.picker-badge.online, .picker-badge.active { background: #e1f7fa; color: #008d9f; }
+.picker-badge.offline, .picker-badge.suspended { background: #faede6; color: #c05a3e; }
+
 @media (max-width: 900px) {
   .calendar-modal-body { grid-template-columns: 1fr; }
   .calendar-event-detail { margin: 0 18px 18px; }

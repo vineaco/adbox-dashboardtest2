@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { api, addDays, formatBytes, todayIso } from '../lib/api';
 import { Badge, Empty, Panel, useToast } from './ui';
+import BoundaryPickerModal from './BoundaryPickerModal';
+import BoxPickerModal from './BoxPickerModal';
+import { EditIcon } from './Icon';
 import {
   DAY_NAMES,
   estimateCampaign,
@@ -60,6 +63,8 @@ export default function CampaignWizard({ initial, campaignId, media, boundaries,
   const [previewDate, setPreviewDate] = useState(initial.startDate);
   const [busy, setBusy] = useState(false);
   const [toastNode, notify] = useToast();
+  const [showBoundaryModal, setShowBoundaryModal] = useState(false);
+  const [showBoxModal, setShowBoxModal] = useState(false);
 
   const set = (key, value) => setDraft((current) => ({ ...current, [key]: value }));
 
@@ -197,72 +202,125 @@ export default function CampaignWizard({ initial, campaignId, media, boundaries,
         {step === 1 && (
           <div className="wizard-step">
             <p className="eyebrow">Step 2 of 4</p>
-            <h2>Choose ads and who sees them</h2>
+            <h2>Choose audience and ads</h2>
             <p className="wizard-hint">
-              Boxes decide what to show from their own GPS fix, so a boundary target reaches whichever box is inside it at
-              the time.
+              Boxes decide what to show based on their own GPS fix, so a boundary target reaches whichever box is inside
+              it at the time.
             </p>
 
-            <label className="field" style={{ marginTop: 20, maxWidth: 560 }}>
-              Target
-              <select value={draft.targetType} onChange={(event) => set('targetType', event.target.value)}>
-                <option value="boundary">Geographic boundary</option>
-                <option value="box">Specific boxes</option>
-                <option value="all">Whole fleet</option>
-              </select>
-            </label>
+            <div style={{ marginTop: 22 }}>
+              <span className="eyebrow" style={{ display: 'block', marginBottom: 6 }}>Target distribution</span>
+              <div className="target-cards">
+                <div
+                  className={`target-card ${draft.targetType === 'boundary' ? 'selected' : ''}`}
+                  onClick={() => {
+                    set('targetType', 'boundary');
+                    if (!draft.boundaryIds.length) setShowBoundaryModal(true);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <span className="target-card-icon">◇</span>
+                  <strong>Geographic boundary</strong>
+                  <p>Target boxes inside specific geographic zones, cities or states.</p>
+                </div>
 
-            {draft.targetType === 'boundary' && (
-              <div className="chip-row">
-                {boundaries.length ? (
-                  boundaries.map((boundary) => (
-                    <button
-                      type="button"
-                      key={boundary.id}
-                      className={draft.boundaryIds.includes(boundary.id) ? 'chip on' : 'chip'}
-                      onClick={() =>
-                        set(
-                          'boundaryIds',
-                          draft.boundaryIds.includes(boundary.id)
-                            ? draft.boundaryIds.filter((id) => id !== boundary.id)
-                            : [...draft.boundaryIds, boundary.id]
-                        )
-                      }
-                    >
-                      {boundary.name}
-                      <small>{boundary.type === 'circle' ? `${Math.round(boundary.radius)} m` : `${boundary.points.length} pts`}</small>
-                    </button>
-                  ))
-                ) : (
-                  <span className="wizard-hint">No boundaries yet — draw one on the Boundaries page.</span>
-                )}
-              </div>
-            )}
+                <div
+                  className={`target-card ${draft.targetType === 'box' ? 'selected' : ''}`}
+                  onClick={() => {
+                    set('targetType', 'box');
+                    if (!draft.boxIds.length) setShowBoxModal(true);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <span className="target-card-icon">◉</span>
+                  <strong>Specific boxes</strong>
+                  <p>Assign explicitly to handpicked boxes by serial number or name.</p>
+                </div>
 
-            {draft.targetType === 'box' && (
-              <div className="chip-row">
-                {boxes.length ? (
-                  boxes.map((box) => (
-                    <button
-                      type="button"
-                      key={box.id}
-                      className={draft.boxIds.includes(box.id) ? 'chip on' : 'chip'}
-                      onClick={() =>
-                        set(
-                          'boxIds',
-                          draft.boxIds.includes(box.id) ? draft.boxIds.filter((id) => id !== box.id) : [...draft.boxIds, box.id]
-                        )
-                      }
-                    >
-                      {box.name}
-                      <small>{box.serialNumber}</small>
-                    </button>
-                  ))
-                ) : (
-                  <span className="wizard-hint">No boxes registered yet.</span>
-                )}
+                <div
+                  className={`target-card ${draft.targetType === 'all' ? 'selected' : ''}`}
+                  onClick={() => set('targetType', 'all')}
+                  role="button"
+                  tabIndex={0}
+                >
+                  <span className="target-card-icon">▦</span>
+                  <strong>Whole fleet</strong>
+                  <p>Deliver to every active box regardless of location (great for brand fallbacks).</p>
+                </div>
               </div>
-            )}
+
+              {draft.targetType === 'boundary' && (
+                <div className="target-selected-summary">
+                  <div>
+                    <strong>
+                      {draft.boundaryIds.length} boundary zone(s) selected
+                    </strong>
+                    <div style={{ marginTop: 4, fontSize: 11, color: '#7f92a6' }}>
+                      {draft.boundaryIds.length ? (
+                        boundaries
+                          .filter((b) => draft.boundaryIds.includes(b.id))
+                          .map((b) => b.name)
+                          .join(', ')
+                      ) : (
+                        'No zones selected yet — click Select zones to choose.'
+                      )}
+                    </div>
+                  </div>
+                  <button type="button" className="btn tiny primary" onClick={() => setShowBoundaryModal(true)}>
+                    <EditIcon /> {draft.boundaryIds.length ? 'Edit zones' : 'Select zones'}
+                  </button>
+                </div>
+              )}
+
+              {draft.targetType === 'box' && (
+                <div className="target-selected-summary">
+                  <div>
+                    <strong>
+                      {draft.boxIds.length} specific box(es) selected
+                    </strong>
+                    <div style={{ marginTop: 4, fontSize: 11, color: '#7f92a6' }}>
+                      {draft.boxIds.length ? (
+                        boxes
+                          .filter((b) => draft.boxIds.includes(b.id))
+                          .map((b) => b.name)
+                          .join(', ')
+                      ) : (
+                        'No boxes selected yet — click Select boxes to choose.'
+                      )}
+                    </div>
+                  </div>
+                  <button type="button" className="btn tiny primary" onClick={() => setShowBoxModal(true)}>
+                    <EditIcon /> {draft.boxIds.length ? 'Edit boxes' : 'Select boxes'}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="media-guidelines">
+              <div className="media-guidelines-head">
+                <span>💡 Media size guidelines & best practices</span>
+              </div>
+              <div className="media-guidelines-grid">
+                <div className="media-guideline-item">
+                  <strong>Target panel resolution</strong>
+                  <span>128×128 native per module (1920×1080 HDMI framebuffer).</span>
+                </div>
+                <div className="media-guideline-item">
+                  <strong>Recommended image format</strong>
+                  <span>High-contrast PNG or WebP, 1:1 or 16:9 ratio.</span>
+                </div>
+                <div className="media-guideline-item">
+                  <strong>Resolution limit</strong>
+                  <span>Keep under 1920×1080. Camera raw photos (4000+ px) exceed hardware GPU memory.</span>
+                </div>
+                <div className="media-guideline-item">
+                  <strong>Legibility at a distance</strong>
+                  <span>Use thick lines (≥3px) and high contrast colors. Tiny fonts blur on LED panels.</span>
+                </div>
+              </div>
+            </div>
 
             <div className="wizard-section-head">
               <strong>Playlist</strong>
@@ -521,6 +579,24 @@ export default function CampaignWizard({ initial, campaignId, media, boundaries,
       </div>
 
       {toastNode}
+
+      {showBoundaryModal && (
+        <BoundaryPickerModal
+          boundaries={boundaries}
+          selectedIds={draft.boundaryIds}
+          onConfirm={(ids) => set('boundaryIds', ids)}
+          onClose={() => setShowBoundaryModal(false)}
+        />
+      )}
+
+      {showBoxModal && (
+        <BoxPickerModal
+          boxes={boxes}
+          selectedIds={draft.boxIds}
+          onConfirm={(ids) => set('boxIds', ids)}
+          onClose={() => setShowBoxModal(false)}
+        />
+      )}
     </section>
   );
 }
