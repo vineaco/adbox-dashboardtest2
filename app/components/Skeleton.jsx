@@ -187,7 +187,9 @@ export function SkeletonCampaigns() {
         </div>
       </header>
 
-      <section className="panel" style={{ position: 'relative' }}>
+      <SkeletonStats count={4} />
+
+      <section className="panel" style={{ marginTop: 18, position: 'relative' }}>
         <SkeletonToolbar />
         <SkeletonTable rows={5} showOverlay overlayLabel="Loading campaign playlists…" />
       </section>
