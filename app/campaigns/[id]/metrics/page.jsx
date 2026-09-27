@@ -4,16 +4,30 @@ import Link from 'next/link';
 import { use, useState } from 'react';
 import { api, addDays, formatDateTime, formatDuration, todayIso } from '../../../lib/api';
 import { Badge, Empty, ErrorState, Loading, Panel, Stat, useResource } from '../../../components/ui';
+import { Pagination, usePagination } from '../../../components/Pagination';
+import { EditIcon, RefreshIcon, SearchIcon } from '../../../components/Icon';
+
+const STATUSES = ['all', 'played', 'skipped', 'failed'];
 
 export default function CampaignMetricsPage({ params }) {
   const { id } = use(params);
   const [from, setFrom] = useState(addDays(todayIso(), -30));
   const [to, setTo] = useState(todayIso());
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('all');
 
   const { loading, data, error, reload } = useResource(
     () => api.campaignMetrics(id, `?from=${from}&to=${to}`),
     [id, from, to]
   );
+
+  const term = search.trim().toLowerCase();
+  const filteredEvents = (data?.events || []).filter((event) => {
+    if (status !== 'all' && event.status !== status) return false;
+    if (!term) return true;
+    return [event.boxName, event.boxSerial, event.mediaName].some((value) => value?.toLowerCase().includes(term));
+  });
+  const { page, setPage, totalPages, pageItems, start } = usePagination(filteredEvents, 20);
 
   return (
     <>
@@ -27,10 +41,10 @@ export default function CampaignMetricsPage({ params }) {
         </div>
         <div className="head-actions">
           <Link className="btn" href={`/campaigns/${id}`}>
-            Edit campaign
+            <EditIcon /> Edit campaign
           </Link>
           <button className="btn" onClick={reload}>
-            Refresh
+            <RefreshIcon /> Refresh
           </button>
         </div>
       </header>
@@ -77,11 +91,38 @@ export default function CampaignMetricsPage({ params }) {
             title="Every play in range"
             description={
               data.truncated
-                ? `Showing the most recent ${data.events.length} of ${data.totals.plays} plays.`
+                ? `Server returned the most recent ${data.events.length} of ${data.totals.plays} plays.`
                 : `${data.events.length} play(s).`
             }
           >
-            {data.events.length ? (
+            <div className="toolbar">
+              <div className="toolbar-group">
+                <label className="field" style={{ minWidth: 260 }}>
+                  Search
+                  <input
+                    type="search"
+                    value={search}
+                    placeholder="Box, serial or ad name"
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
+                </label>
+                <label className="field">
+                  Status
+                  <select value={status} onChange={(event) => setStatus(event.target.value)}>
+                    {STATUSES.map((value) => (
+                      <option key={value} value={value}>
+                        {value === 'all' ? 'All statuses' : value}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <span style={{ color: '#7f92a6', fontSize: 11 }}>
+                {filteredEvents.length} of {data.events.length} shown
+              </span>
+            </div>
+
+            {pageItems.length ? (
               <div className="table-wrap">
                 <table className="table">
                   <thead>
@@ -96,7 +137,7 @@ export default function CampaignMetricsPage({ params }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.events.map((event) => (
+                    {pageItems.map((event) => (
                       <tr key={event.id}>
                         <td>
                           <strong>{event.boxName || event.boxId}</strong>
@@ -123,13 +164,25 @@ export default function CampaignMetricsPage({ params }) {
                 </table>
               </div>
             ) : (
-              <Empty icon="▤" title="No plays in this range">
-                Widen the date range, or check the box has synced and cached this campaign's media.
+              <Empty icon={data.events.length ? <SearchIcon /> : '▤'} title={data.events.length ? 'No plays match' : 'No plays in this range'}>
+                {data.events.length
+                  ? 'Try a different search term or status filter.'
+                  : "Widen the date range, or check the box has synced and cached this campaign's media."}
               </Empty>
             )}
+
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onChange={setPage}
+              totalItems={filteredEvents.length}
+              shownCount={pageItems.length}
+              start={start}
+            />
           </Panel>
         </>
       )}
     </>
   );
 }
+

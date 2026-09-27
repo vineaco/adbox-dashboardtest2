@@ -4,6 +4,8 @@ import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { api, formatDateTime } from '../lib/api';
 import { Badge, Empty, ErrorState, Loading, Panel, useResource, useToast } from '../components/ui';
+import { Pagination, usePagination } from '../components/Pagination';
+import { RefreshIcon, SearchIcon, TrashIcon } from '../components/Icon';
 
 const BoundaryEditor = dynamic(() => import('../components/BoundaryEditor'), {
   ssr: false,
@@ -13,6 +15,7 @@ const BoundaryEditor = dynamic(() => import('../components/BoundaryEditor'), {
 export default function BoundariesPage() {
   const [toastNode, notify] = useToast();
   const [selected, setSelected] = useState(null);
+  const [search, setSearch] = useState('');
   const { loading, data, error, reload } = useResource(() => api.boundaries());
 
   async function create(draft) {
@@ -47,6 +50,12 @@ export default function BoundariesPage() {
     }
   }
 
+  const term = search.trim().toLowerCase();
+  const filtered = (data?.boundaries || []).filter(
+    (boundary) => !term || boundary.name.toLowerCase().includes(term)
+  );
+  const { page, setPage, totalPages, pageItems, start } = usePagination(filtered, 10);
+
   return (
     <>
       <header className="page-head">
@@ -59,7 +68,7 @@ export default function BoundariesPage() {
           </p>
         </div>
         <button className="btn" onClick={reload}>
-          Refresh
+          <RefreshIcon /> Refresh
         </button>
       </header>
 
@@ -77,7 +86,19 @@ export default function BoundariesPage() {
           </Panel>
 
           <Panel eyebrow="Saved" title={`${data.boundaries.length} boundary(s)`} description="Set an average daily traffic figure so campaign metrics can estimate impressions for this area.">
-            {data.boundaries.length ? (
+            {data.boundaries.length > 5 && (
+              <label className="field" style={{ marginBottom: 14 }}>
+                Search
+                <input
+                  type="search"
+                  value={search}
+                  placeholder="Boundary name"
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+              </label>
+            )}
+
+            {pageItems.length ? (
               <div className="table-wrap">
                 <table className="table">
                   <thead>
@@ -90,7 +111,7 @@ export default function BoundariesPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.boundaries.map((boundary) => (
+                    {pageItems.map((boundary) => (
                       <tr key={boundary.id}>
                         <td>
                           <strong>{boundary.name}</strong>
@@ -123,8 +144,8 @@ export default function BoundariesPage() {
                           />
                         </td>
                         <td>
-                          <button className="btn tiny danger" onClick={() => remove(boundary)}>
-                            Delete
+                          <button className="btn tiny danger" onClick={() => remove(boundary)} title="Delete">
+                            <TrashIcon />
                           </button>
                         </td>
                       </tr>
@@ -133,10 +154,21 @@ export default function BoundariesPage() {
                 </table>
               </div>
             ) : (
-              <Empty icon="◇" title="No boundaries yet">
-                Until you draw one, only fleet-wide and per-box campaigns will reach your screens.
+              <Empty icon={data.boundaries.length ? <SearchIcon /> : '◇'} title={data.boundaries.length ? 'No boundaries match' : 'No boundaries yet'}>
+                {data.boundaries.length
+                  ? 'Try a different search term.'
+                  : 'Until you draw one, only fleet-wide and per-box campaigns will reach your screens.'}
               </Empty>
             )}
+
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onChange={setPage}
+              totalItems={filtered.length}
+              shownCount={pageItems.length}
+              start={start}
+            />
           </Panel>
         </div>
       )}

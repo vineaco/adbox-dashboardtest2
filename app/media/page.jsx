@@ -3,12 +3,18 @@
 import { useRef, useState } from 'react';
 import { api, formatBytes, formatDateTime } from '../lib/api';
 import { Badge, Empty, ErrorState, Loading, Panel, useResource, useToast } from '../components/ui';
+import { Pagination, usePagination } from '../components/Pagination';
+import { RefreshIcon, SearchIcon, TrashIcon, UploadIcon } from '../components/Icon';
+
+const TYPES = ['all', 'image', 'video'];
 
 export default function MediaPage() {
   const inputRef = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [toastNode, notify] = useToast();
   const { loading, data, error, reload } = useResource(() => api.media());
+  const [search, setSearch] = useState('');
+  const [type, setType] = useState('all');
 
   async function upload(files) {
     if (!files?.length) return;
@@ -55,6 +61,14 @@ export default function MediaPage() {
     }
   }
 
+  const term = search.trim().toLowerCase();
+  const filtered = (data?.media || []).filter((item) => {
+    if (type !== 'all' && item.type !== type) return false;
+    if (!term) return true;
+    return item.name?.toLowerCase().includes(term);
+  });
+  const { page, setPage, totalPages, pageItems, start } = usePagination(filtered, 12);
+
   return (
     <>
       <header className="page-head">
@@ -76,10 +90,10 @@ export default function MediaPage() {
             onChange={(event) => upload([...event.target.files])}
           />
           <button className="btn primary" disabled={uploading} onClick={() => inputRef.current?.click()}>
-            {uploading ? 'Uploading…' : 'Upload media'}
+            <UploadIcon /> {uploading ? 'Uploading…' : 'Upload media'}
           </button>
           <button className="btn" onClick={reload}>
-            Refresh
+            <RefreshIcon /> Refresh
           </button>
         </div>
       </header>
@@ -87,52 +101,94 @@ export default function MediaPage() {
       <Panel>
         {loading && <Loading label="Loading media…" />}
         {error && <ErrorState error={error} onRetry={reload} />}
-        {data &&
-          (data.media.length ? (
-            <div className="media-grid">
-              {data.media.map((item) => (
-                <article key={item.id} className="media-card">
-                  {item.type === 'video' ? (
-                    <video src={item.url} muted preload="metadata" />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.url} alt={item.name} loading="lazy" />
-                  )}
-                  <div className="meta">
-                    <strong title={item.name}>{item.name}</strong>
-                    <small>
-                      {formatBytes(item.bytes)} · {item.width && item.height ? `${item.width}×${item.height}` : item.mimeType}
-                    </small>
-                    <small>{formatDateTime(item.createdAt)}</small>
-                  </div>
-                  <div className="row">
-                    <Badge state="ok">{item.type}</Badge>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#929890', fontSize: 10 }}>
-                      <input
-                        type="number"
-                        min="1"
-                        max="3600"
-                        defaultValue={item.durationSeconds}
-                        onBlur={(event) => setDuration(item, event.target.value)}
-                        style={{ width: 54, padding: '4px 6px', border: '1px solid #d8dcd2', borderRadius: 4, fontSize: 11 }}
-                      />
-                      s
-                    </label>
-                    <button className="btn tiny danger" onClick={() => remove(item)}>
-                      Delete
-                    </button>
-                  </div>
-                </article>
-              ))}
+        {data && (
+          <>
+            <div className="toolbar">
+              <div className="toolbar-group">
+                <label className="field" style={{ minWidth: 260 }}>
+                  Search
+                  <input
+                    type="search"
+                    value={search}
+                    placeholder="Media name"
+                    onChange={(event) => setSearch(event.target.value)}
+                  />
+                </label>
+                <label className="field">
+                  Type
+                  <select value={type} onChange={(event) => setType(event.target.value)}>
+                    {TYPES.map((value) => (
+                      <option key={value} value={value}>
+                        {value === 'all' ? 'All types' : value}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <span style={{ color: '#929890', fontSize: 11 }}>
+                {filtered.length} of {data.media.length} files
+              </span>
             </div>
-          ) : (
-            <Empty icon="▤" title="The library is empty">
-              Upload an image or video, then build a campaign that targets a boundary or the whole fleet.
-            </Empty>
-          ))}
+
+            {pageItems.length ? (
+              <div className="media-grid">
+                {pageItems.map((item) => (
+                  <article key={item.id} className="media-card">
+                    {item.type === 'video' ? (
+                      <video src={item.url} muted preload="metadata" />
+                    ) : (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.url} alt={item.name} loading="lazy" />
+                    )}
+                    <div className="meta">
+                      <strong title={item.name}>{item.name}</strong>
+                      <small>
+                        {formatBytes(item.bytes)} · {item.width && item.height ? `${item.width}×${item.height}` : item.mimeType}
+                      </small>
+                      <small>{formatDateTime(item.createdAt)}</small>
+                    </div>
+                    <div className="row">
+                      <Badge state="ok">{item.type}</Badge>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#929890', fontSize: 10 }}>
+                        <input
+                          type="number"
+                          min="1"
+                          max="3600"
+                          defaultValue={item.durationSeconds}
+                          onBlur={(event) => setDuration(item, event.target.value)}
+                          style={{ width: 54, padding: '4px 6px', border: '1px solid #d8dcd2', borderRadius: 4, fontSize: 11 }}
+                        />
+                        s
+                      </label>
+                      <button className="btn tiny danger" onClick={() => remove(item)} title="Delete">
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <Empty icon={data.media.length ? <SearchIcon /> : '▤'} title={data.media.length ? 'No media matches' : 'The library is empty'}>
+                {data.media.length
+                  ? 'Try a different search term or clear the type filter.'
+                  : 'Upload an image or video, then build a campaign that targets a boundary or the whole fleet.'}
+              </Empty>
+            )}
+
+            <Pagination
+              page={page}
+              totalPages={totalPages}
+              onChange={setPage}
+              totalItems={filtered.length}
+              shownCount={pageItems.length}
+              start={start}
+            />
+          </>
+        )}
       </Panel>
 
       {toastNode}
     </>
   );
 }
+
