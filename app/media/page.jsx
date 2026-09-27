@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { api, formatBytes, formatDateTime } from '../lib/api';
+import { inspectFileBeforeUpload, validateMediaFit } from '../lib/mediaValidation';
 import { Badge, Empty, ErrorState, Loading, Panel, useResource, useToast } from '../components/ui';
 import { Pagination, usePagination } from '../components/Pagination';
 import { SkeletonMedia } from '../components/Skeleton';
@@ -23,6 +24,16 @@ export default function MediaPage() {
     let added = 0;
     for (const file of files) {
       try {
+        const fit = await inspectFileBeforeUpload(file);
+        if (fit.errors.length > 0) {
+          const proceed = window.confirm(
+            `Warning: "${file.name}" may not work properly on the 128×128 LED screen:\n\n` +
+              fit.errors.map((e) => `• ${e}`).join('\n') +
+              '\n\nDo you still want to upload?'
+          );
+          if (!proceed) continue;
+        }
+
         const formData = new FormData();
         formData.append('file', file);
         formData.append('name', file.name);
@@ -134,40 +145,51 @@ export default function MediaPage() {
 
             {pageItems.length ? (
               <div className="media-grid">
-                {pageItems.map((item) => (
-                  <article key={item.id} className="media-card">
-                    {item.type === 'video' ? (
-                      <video src={item.url} muted preload="metadata" />
-                    ) : (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.url} alt={item.name} loading="lazy" />
-                    )}
-                    <div className="meta">
-                      <strong title={item.name}>{item.name}</strong>
-                      <small>
-                        {formatBytes(item.bytes)} · {item.width && item.height ? `${item.width}×${item.height}` : item.mimeType}
-                      </small>
-                      <small>{formatDateTime(item.createdAt)}</small>
-                    </div>
-                    <div className="row">
-                      <Badge state="ok">{item.type}</Badge>
-                      <label style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#929890', fontSize: 10 }}>
-                        <input
-                          type="number"
-                          min="1"
-                          max="3600"
-                          defaultValue={item.durationSeconds}
-                          onBlur={(event) => setDuration(item, event.target.value)}
-                          style={{ width: 54, padding: '4px 6px', border: '1px solid #d8dcd2', borderRadius: 4, fontSize: 11 }}
-                        />
-                        s
-                      </label>
-                      <button className="btn tiny danger" onClick={() => remove(item)} title="Delete">
-                        <TrashIcon />
-                      </button>
-                    </div>
-                  </article>
-                ))}
+                {pageItems.map((item) => {
+                  const fit = validateMediaFit(item);
+                  return (
+                    <article key={item.id} className="media-card">
+                      {item.type === 'video' ? (
+                        <video src={item.url} muted preload="metadata" />
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={item.url} alt={item.name} loading="lazy" />
+                      )}
+                      <div className="meta">
+                        <strong title={item.name}>{item.name}</strong>
+                        <small>
+                          {formatBytes(item.bytes)} · {item.width && item.height ? `${item.width}×${item.height}` : item.mimeType}
+                        </small>
+                        <div className="media-val-badges">
+                          {fit.badges.map((b, i) => (
+                            <span key={i} className={`media-val-badge ${b.type}`} title={b.description}>
+                              {b.type === 'success' ? '✓ ' : b.type === 'warning' ? '⚠️ ' : ''}
+                              {b.label}
+                            </span>
+                          ))}
+                        </div>
+                        <small>{formatDateTime(item.createdAt)}</small>
+                      </div>
+                      <div className="row">
+                        <Badge state="ok">{item.type}</Badge>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#929890', fontSize: 10 }}>
+                          <input
+                            type="number"
+                            min="1"
+                            max="3600"
+                            defaultValue={item.durationSeconds}
+                            onBlur={(event) => setDuration(item, event.target.value)}
+                            style={{ width: 54, padding: '4px 6px', border: '1px solid #d8dcd2', borderRadius: 4, fontSize: 11 }}
+                          />
+                          s
+                        </label>
+                        <button className="btn tiny danger" onClick={() => remove(item)} title="Delete">
+                          <TrashIcon />
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             ) : (
               <Empty icon={data.media.length ? <SearchIcon /> : '▤'} title={data.media.length ? 'No media matches' : 'The library is empty'}>

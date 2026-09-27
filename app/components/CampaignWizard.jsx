@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { api, addDays, formatBytes, todayIso } from '../lib/api';
+import { validateMediaFit } from '../lib/mediaValidation';
 import { Badge, Empty, Panel, useToast } from './ui';
 import BoundaryPickerModal from './BoundaryPickerModal';
 import BoxPickerModal from './BoxPickerModal';
@@ -73,6 +74,19 @@ export default function CampaignWizard({ initial, campaignId, media, boundaries,
     [draft.items, media]
   );
 
+  const selectedFits = useMemo(
+    () => selectedMedia.map((m) => ({ media: m, fit: validateMediaFit(m) })),
+    [selectedMedia]
+  );
+  const selectedWarnings = useMemo(
+    () => selectedFits.flatMap((sf) => sf.fit.warnings.map((w) => ({ name: sf.media.name, text: w }))),
+    [selectedFits]
+  );
+  const selectedErrors = useMemo(
+    () => selectedFits.flatMap((sf) => sf.fit.errors.map((e) => ({ name: sf.media.name, text: e }))),
+    [selectedFits]
+  );
+
   // Ads carry their own screen time; the campaign slot length is the default.
   const draftAds = draft.items.map((item) => {
     const asset = media.find((entry) => entry.id === item.mediaId);
@@ -111,7 +125,7 @@ export default function CampaignWizard({ initial, campaignId, media, boundaries,
 
   const ready = [
     Boolean(draft.name.trim()),
-    draft.items.length > 0 && targetReady,
+    draft.items.length > 0 && targetReady && selectedErrors.length === 0,
     draft.startDate <= draft.endDate &&
       draft.slots.length > 0 &&
       draft.slots.every((slot) => slot.daysOfWeek.length > 0 && toMinutes(slot.startTime) < toMinutes(slot.endTime)),
@@ -330,6 +344,7 @@ export default function CampaignWizard({ initial, campaignId, media, boundaries,
               <div className="media-grid">
                 {media.map((asset) => {
                   const chosen = draft.items.find((item) => item.mediaId === asset.id);
+                  const fit = validateMediaFit(asset);
                   return (
                     <article key={asset.id} className={`media-card ${chosen ? 'selected' : ''}`}>
                       <button type="button" onClick={() => toggleItem(asset)}>
@@ -341,7 +356,18 @@ export default function CampaignWizard({ initial, campaignId, media, boundaries,
                         )}
                         <div className="meta">
                           <strong title={asset.name}>{asset.name}</strong>
-                          <small>{chosen ? `in playlist · ${chosen.durationSeconds}s` : formatBytes(asset.bytes)}</small>
+                          <small>
+                            {chosen ? `in playlist · ${chosen.durationSeconds}s` : formatBytes(asset.bytes)} ·{' '}
+                            {asset.width && asset.height ? `${asset.width}×${asset.height}` : asset.mimeType}
+                          </small>
+                          <div className="media-val-badges">
+                            {fit.badges.map((b, i) => (
+                              <span key={i} className={`media-val-badge ${b.type}`} title={b.description}>
+                                {b.type === 'success' ? '✓ ' : b.type === 'warning' ? '⚠️ ' : ''}
+                                {b.label}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </button>
                       {chosen && (
@@ -376,6 +402,41 @@ export default function CampaignWizard({ initial, campaignId, media, boundaries,
               <Empty icon="▤" title="No media yet">
                 Upload artwork on the Media page first.
               </Empty>
+            )}
+
+            {selectedMedia.length > 0 && (
+              selectedErrors.length > 0 || selectedWarnings.length > 0 ? (
+                <div className={`media-val-alert ${selectedErrors.length ? 'has-errors' : ''}`}>
+                  <div className="media-val-alert-head">
+                    <span>
+                      {selectedErrors.length ? '⛔ Hardware Compatibility Issues' : '⚠️ 128×128 LED Panel Fit Advisory'} (
+                      {selectedMedia.length} ad{selectedMedia.length === 1 ? '' : 's'} selected)
+                    </span>
+                  </div>
+                  <p style={{ margin: '0 0 6px' }}>
+                    The target screen is a <strong>128×128 square LED panel</strong>. To prevent visual distortion and cellular download timeouts:
+                  </p>
+                  <ul>
+                    {selectedErrors.map((err, i) => (
+                      <li key={`e-${i}`} style={{ color: '#b33924', fontWeight: 600 }}>
+                        <strong>{err.name}</strong>: {err.text}
+                      </li>
+                    ))}
+                    {selectedWarnings.map((warn, i) => (
+                      <li key={`warn-${i}`}>
+                        <strong>{warn.name}</strong>: {warn.text}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div className="media-val-alert all-good">
+                  <div className="media-val-alert-head">
+                    <span>✓ 100% LED Hardware Compatible</span>
+                  </div>
+                  All selected ads match the 128×128 square screen ratio and optimal bandwidth limits for seamless playback.
+                </div>
+              )
             )}
           </div>
         )}
@@ -535,6 +596,16 @@ export default function CampaignWizard({ initial, campaignId, media, boundaries,
               <div>
                 <small>Playlist</small>
                 <strong>{selectedMedia.map((item) => item.name).join(', ')}</strong>
+              </div>
+              <div>
+                <small>128×128 Hardware Fit</small>
+                <strong style={{ color: selectedErrors.length ? '#b33924' : selectedWarnings.length ? '#a86c00' : '#12804b' }}>
+                  {selectedErrors.length
+                    ? `⛔ ${selectedErrors.length} file error(s)`
+                    : selectedWarnings.length
+                    ? `⚠️ ${selectedWarnings.length} advisory notice(s)`
+                    : '✓ 100% LED hardware compatible'}
+                </strong>
               </div>
               <div>
                 <small>Estimated on {previewDate}</small>
