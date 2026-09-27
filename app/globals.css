@@ -161,6 +161,7 @@ pre.code { max-height: 340px; overflow: auto; margin: 10px 0 0; padding: 13px; b
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 22px; background: rgba(37, 42, 38, .46); }
 .modal { width: min(560px, 100%); max-height: calc(100vh - 44px); overflow: auto; padding: 24px; border: 1px solid var(--line); border-radius: 9px; background: var(--card); box-shadow: 0 22px 60px rgba(31, 39, 30, .22); }
+.modal.wide { width: min(920px, calc(100vw - 32px)); max-width: 960px; max-height: calc(100vh - 40px); }
 .modal h2 { margin-bottom: 8px; font: 600 22px Fraunces, serif; }
 .modal > p { margin-bottom: 18px; color: var(--ink-faint); font-size: 12px; line-height: 1.55; }
 
@@ -312,9 +313,9 @@ pre.code { max-height: 340px; overflow: auto; margin: 10px 0 0; padding: 13px; b
 .media-guideline-item { display: grid; gap: 3px; font-size: 11px; color: #4f6478; }
 .media-guideline-item strong { color: #1f2c40; font-size: 11px; }
 
-/* ---------- picker modal items ---------- */
-.picker-modal-inner { display: flex; flex-direction: column; gap: 10px; }
-.picker-list { display: grid; gap: 6px; max-height: 380px; overflow-y: auto; padding-right: 4px; }
+/* ---------- picker modal items & drill-down hierarchy ---------- */
+.picker-modal-inner { display: flex; flex-direction: column; gap: 14px; }
+.picker-list { display: grid; gap: 6px; max-height: 420px; overflow-y: auto; padding-right: 4px; }
 .picker-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #d7e8ec; border-radius: 6px; background: #fff; cursor: pointer; transition: all .15s ease; }
 .picker-item:hover { border-color: #6fcbd8; background: #f8fcfd; }
 .picker-item.selected { border-color: #008d9f; background: #eef8fa; }
@@ -325,6 +326,43 @@ pre.code { max-height: 340px; overflow: auto; margin: 10px 0 0; padding: 13px; b
 .picker-badge { padding: 3px 8px; border-radius: 4px; font-size: 9px; font-weight: 700; text-transform: uppercase; background: #eaf3f6; color: #4f6478; letter-spacing: .5px; }
 .picker-badge.online, .picker-badge.active { background: #e1f7fa; color: #008d9f; }
 .picker-badge.offline, .picker-badge.suspended { background: #faede6; color: #c05a3e; }
+
+/* Cascading filter toolbar */
+.cascade-toolbar { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto; gap: 10px; align-items: flex-end; padding: 14px; border: 1px solid #d7e8ec; border-radius: 8px; background: #f8fcfd; }
+.cascade-field { display: grid; gap: 5px; color: #4f6478; font-size: 10px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase; }
+.cascade-field select, .cascade-field input { width: 100%; padding: 8px 10px; border: 1px solid #d7e8ec; border-radius: 5px; background: #fff; color: #1f2c40; font-size: 12px; font-weight: 400; text-transform: none; }
+.cascade-field select:focus, .cascade-field input:focus { border-color: #6fcbd8; outline: none; }
+
+/* Hierarchical tree structure */
+.geo-tree { display: grid; gap: 14px; max-height: 440px; overflow-y: auto; padding-right: 6px; }
+.geo-country-block { display: grid; gap: 10px; padding: 14px; border: 1px solid #d2e8ed; border-radius: 8px; background: #f4fbfd; }
+.geo-country-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.geo-country-title { display: flex; align-items: center; gap: 8px; color: #00474f; font-weight: 700; font-size: 13px; }
+
+.geo-state-card { display: grid; gap: 8px; padding: 12px 14px; border: 1px solid #d7e8ec; border-radius: 7px; background: #fff; }
+.geo-state-card.highlight { border-color: #008d9f; background: #f9feff; }
+.geo-state-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; user-select: none; }
+.geo-state-info { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #1f2c40; }
+.geo-state-info strong { font-size: 13px; }
+.geo-state-count { padding: 2px 7px; border-radius: 999px; background: #eaf3f6; color: #007e8e; font-size: 10px; font-weight: 600; }
+
+.geo-city-group { display: grid; gap: 6px; padding: 10px 12px; border-left: 2px solid #bfe8ef; background: #f9fcfe; border-radius: 0 6px 6px 0; margin-left: 8px; }
+.geo-city-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11px; color: #4f6478; }
+.geo-city-header strong { display: flex; align-items: center; gap: 6px; color: #1f2c40; font-size: 11px; }
+
+.geo-zones-grid { display: grid; gap: 6px; margin-top: 4px; }
+.geo-zone-card { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1px solid #e1eef1; border-radius: 6px; background: #fff; cursor: pointer; transition: all .15s ease; }
+.geo-zone-card:hover { border-color: #6fcbd8; background: #f2fafc; }
+.geo-zone-card.selected { border-color: #008d9f; background: #eef8fa; }
+.geo-zone-card input[type=checkbox] { width: 16px; height: 16px; accent-color: #008d9f; cursor: pointer; }
+.geo-zone-info { flex: 1; min-width: 0; display: grid; gap: 2px; text-align: left; }
+.geo-zone-info strong { font-size: 12px; color: #1f2c40; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.geo-zone-info small { font-size: 10px; color: #7f92a6; }
+.geo-zone-traffic { color: #00636f; font-size: 10px; font-weight: 600; }
+
+.select-state-btn { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border: 1px solid #bfe0e7; border-radius: 4px; background: #f0f9fb; color: #00636f; font-size: 10px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.select-state-btn:hover { background: #d7f1f6; border-color: #008d9f; }
+.select-state-btn.active { background: #008d9f; color: #fff; border-color: #008d9f; }
 
 @media (max-width: 900px) {
   .calendar-modal-body { grid-template-columns: 1fr; }

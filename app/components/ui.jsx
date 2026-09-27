@@ -75,7 +75,7 @@ export function ErrorState({ error, onRetry }) {
   );
 }
 
-export function Modal({ title, description, onClose, children }) {
+export function Modal({ title, description, onClose, className = '', wide = false, children }) {
   useEffect(() => {
     const onKey = (event) => event.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
@@ -84,7 +84,7 @@ export function Modal({ title, description, onClose, children }) {
 
   return (
     <div className="modal-backdrop" onClick={(event) => event.target === event.currentTarget && onClose()}>
-      <div className="modal" role="dialog" aria-modal="true">
+      <div className={`modal ${wide ? 'wide' : ''} ${className}`} role="dialog" aria-modal="true">
         <h2>{title}</h2>
         {description && <p>{description}</p>}
         {children}

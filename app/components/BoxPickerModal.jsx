@@ -3,10 +3,20 @@
 import { useMemo, useState } from 'react';
 import { Modal } from './ui';
 import { Pagination, usePagination } from './Pagination';
-import { SearchIcon } from './Icon';
+import { BoxIcon, SearchIcon, TrashIcon } from './Icon';
 
-const STATUSES = ['all', 'active', 'suspended', 'retired'];
-const CONNECTIVITY = ['all', 'online', 'offline'];
+const STATUSES = [
+  { value: 'all', label: 'All Statuses' },
+  { value: 'active', label: 'Active' },
+  { value: 'suspended', label: 'Suspended' },
+  { value: 'retired', label: 'Retired' }
+];
+
+const CONNECTIVITY = [
+  { value: 'all', label: 'All Connectivity' },
+  { value: 'online', label: 'Online' },
+  { value: 'offline', label: 'Offline' }
+];
 
 export default function BoxPickerModal({ boxes, selectedIds = [], onConfirm, onClose }) {
   const [selected, setSelected] = useState(() => new Set(selectedIds));
@@ -54,46 +64,57 @@ export default function BoxPickerModal({ boxes, selectedIds = [], onConfirm, onC
 
   return (
     <Modal
+      wide
       title="Select target boxes"
       description="Choose specific screens to assign to this campaign. The schedule will only be delivered to the selected boxes."
       onClose={onClose}
     >
       <div className="picker-modal-inner">
-        <div className="toolbar" style={{ marginTop: 12, marginBottom: 14 }}>
-          <div className="toolbar-group">
-            <label className="field" style={{ minWidth: 200 }}>
-              Search
-              <input
-                type="search"
-                placeholder="Name, serial, screen label"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </label>
-            <label className="field">
-              Status
-              <select value={status} onChange={(e) => setStatus(e.target.value)}>
-                {STATUSES.map((s) => (
-                  <option key={s} value={s}>
-                    {s === 'all' ? 'All statuses' : s}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              Connectivity
-              <select value={connectivity} onChange={(e) => setConnectivity(e.target.value)}>
-                {CONNECTIVITY.map((c) => (
-                  <option key={c} value={c}>
-                    {c === 'all' ? 'All' : c}
-                  </option>
-                ))}
-              </select>
-            </label>
+        <div className="cascade-toolbar" style={{ marginTop: 8 }}>
+          <label className="cascade-field">
+            Search
+            <input
+              type="search"
+              placeholder="Name, serial, screen label"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </label>
+          <label className="cascade-field">
+            Status
+            <select value={status} onChange={(e) => setStatus(e.target.value)}>
+              {STATUSES.map((s) => (
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="cascade-field">
+            Connectivity
+            <select value={connectivity} onChange={(e) => setConnectivity(e.target.value)}>
+              {CONNECTIVITY.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div style={{ display: 'flex', gap: 6, alignSelf: 'flex-end' }}>
+            <button type="button" className="btn tiny" onClick={toggleAllVisible}>
+              {pageItems.length && pageItems.every((b) => selected.has(b.id)) ? 'Deselect page' : 'Select page'}
+            </button>
+            {selected.size > 0 && (
+              <button
+                type="button"
+                className="btn tiny danger"
+                onClick={() => setSelected(new Set())}
+                title="Clear all"
+              >
+                <TrashIcon />
+              </button>
+            )}
           </div>
-          <button type="button" className="btn tiny" onClick={toggleAllVisible}>
-            {pageItems.every((b) => selected.has(b.id)) ? 'Deselect page' : 'Select page'}
-          </button>
         </div>
 
         {pageItems.length ? (
@@ -123,7 +144,10 @@ export default function BoxPickerModal({ boxes, selectedIds = [], onConfirm, onC
                     aria-label={`Select ${b.name}`}
                   />
                   <div className="picker-item-info">
-                    <strong>{b.name}</strong>
+                    <strong style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <BoxIcon />
+                      {b.name}
+                    </strong>
                     <small>
                       {b.serialNumber}
                       {b.screenLabel ? ` · ${b.screenLabel}` : ''}
@@ -138,7 +162,9 @@ export default function BoxPickerModal({ boxes, selectedIds = [], onConfirm, onC
           </div>
         ) : (
           <div className="empty" style={{ minHeight: 140 }}>
-            <i><SearchIcon /></i>
+            <i>
+              <SearchIcon />
+            </i>
             <strong>No boxes match</strong>
             <p>Try clearing filters or search terms.</p>
           </div>
@@ -153,10 +179,15 @@ export default function BoxPickerModal({ boxes, selectedIds = [], onConfirm, onC
           start={start}
         />
 
-        <div className="form-actions" style={{ marginTop: 18, paddingTop: 14 }}>
-          <span style={{ marginRight: 'auto', alignSelf: 'center', fontSize: 12, color: '#008d9f', fontWeight: 600 }}>
-            {selected.size} box(es) selected
-          </span>
+        <div className="form-actions" style={{ marginTop: 14, paddingTop: 14 }}>
+          <div style={{ marginRight: 'auto', alignSelf: 'center', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 13, color: '#008d9f', fontWeight: 700 }}>
+              {selected.size} box(es) selected
+            </span>
+            <span style={{ fontSize: 11, color: '#7f92a6' }}>
+              across {boxes.length} total registered
+            </span>
+          </div>
           <button type="button" className="btn" onClick={onClose}>
             Cancel
           </button>
