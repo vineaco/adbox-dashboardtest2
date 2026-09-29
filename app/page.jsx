@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { api, formatDateTime, formatRelative } from './lib/api';
 import { Badge, Empty, ErrorState, Loading, Panel, Stat, useResource } from './components/ui';
 import { SkeletonOverview } from './components/Skeleton';
+import { Pagination, usePagination } from './components/Pagination';
 
 const FleetMap = dynamic(() => import('./components/FleetMap'), {
   ssr: false,
@@ -16,6 +17,7 @@ export default function OverviewPage() {
     const [overview, locations, boundaries] = await Promise.all([api.overview(), api.locations(), api.boundaries()]);
     return { overview, locations: locations.locations, boundaries: boundaries.boundaries };
   });
+  const deliveryPager = usePagination(data?.overview?.recentDeliveries || [], 10);
 
   if (loading) return <SkeletonOverview />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
@@ -107,7 +109,7 @@ export default function OverviewPage() {
                 </tr>
               </thead>
               <tbody>
-                {overview.recentDeliveries.map((delivery) => (
+                {deliveryPager.pageItems.map((delivery) => (
                   <tr key={delivery.id}>
                     <td>
                       <Link href={`/fleet/${delivery.boxId}`}>
@@ -135,6 +137,16 @@ export default function OverviewPage() {
             the Pi.
           </Empty>
         )}
+        <Pagination
+          page={deliveryPager.page}
+          totalPages={deliveryPager.totalPages}
+          onChange={deliveryPager.setPage}
+          totalItems={overview.recentDeliveries.length}
+          shownCount={deliveryPager.pageItems.length}
+          start={deliveryPager.start}
+          pageSize={deliveryPager.pageSize}
+          onPageSizeChange={deliveryPager.setPageSize}
+        />
       </Panel>
     </>
   );

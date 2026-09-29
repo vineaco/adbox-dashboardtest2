@@ -5,6 +5,7 @@ import { api, formatDateTime, formatRelative } from '../lib/api';
 import { Badge, Empty, ErrorState, Loading, Modal, Panel, useResource, useToast } from '../components/ui';
 import { SkeletonTable } from '../components/Skeleton';
 import { AdboxLogoMark } from '../components/AdboxLogo';
+import { Pagination, usePagination } from '../components/Pagination';
 
 export default function ProvisioningPage() {
   const [form, setForm] = useState({ name: '', screenLabel: '', serialNumber: '', timezone: 'Africa/Lagos', ttlHours: 168, notes: '' });
@@ -12,6 +13,8 @@ export default function ProvisioningPage() {
   const [busy, setBusy] = useState(false);
   const [toastNode, notify] = useToast();
   const { loading, data, error, reload } = useResource(() => api.provisioningCodes());
+  const tokens = data?.tokens || [];
+  const tokenPager = usePagination(tokens, 10);
 
   const update = (field) => (event) => setForm((previous) => ({ ...previous, [field]: event.target.value }));
 
@@ -150,7 +153,7 @@ sudo adbox-provision <PROVISIONING-CODE> --server http://192.168.1.50:8788`}</pr
                   </tr>
                 </thead>
                 <tbody>
-                  {data.tokens.map((token) => (
+                  {tokenPager.pageItems.map((token) => (
                     <tr key={token.id}>
                       <td className="mono">{token.state === 'available' ? token.code : '••••-••••-••••'}</td>
                       <td>
@@ -181,6 +184,18 @@ sudo adbox-provision <PROVISIONING-CODE> --server http://192.168.1.50:8788`}</pr
               Issue one above to onboard your first Raspberry Pi.
             </Empty>
           ))}
+        {data && (
+          <Pagination
+            page={tokenPager.page}
+            totalPages={tokenPager.totalPages}
+            onChange={tokenPager.setPage}
+            totalItems={tokens.length}
+            shownCount={tokenPager.pageItems.length}
+            start={tokenPager.start}
+            pageSize={tokenPager.pageSize}
+            onPageSizeChange={tokenPager.setPageSize}
+          />
+        )}
       </Panel>
 
       {issued && (

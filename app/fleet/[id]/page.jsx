@@ -7,6 +7,7 @@ import { use, useState } from 'react';
 import { api, addDays, formatDateTime, formatDuration, formatRelative, todayIso } from '../../lib/api';
 import { Badge, Empty, ErrorState, Loading, Modal, Panel, Stat, useResource, useToast } from '../../components/ui';
 import { SkeletonFleetDetail, SkeletonTable } from '../../components/Skeleton';
+import { Pagination, usePagination } from '../../components/Pagination';
 
 const FleetMap = dynamic(() => import('../../components/FleetMap'), { ssr: false, loading: () => <div className="map small" /> });
 
@@ -27,6 +28,9 @@ export default function BoxDetailPage({ params }) {
 
   const { loading, data, error, reload } = useResource(() => api.box(id), [id]);
   const preview = useResource(() => api.schedulePreview(id, `?serviceDate=${previewDate}`), [id, previewDate]);
+  const deliveryPager = usePagination(data?.deliveries || [], 10);
+  const playbackPager = usePagination(data?.playbackEvents || [], 10);
+  const errorPager = usePagination(data?.errors || [], 10);
 
   if (loading) return <SkeletonFleetDetail />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
@@ -212,7 +216,7 @@ export default function BoxDetailPage({ params }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {deliveries.map((delivery) => (
+                    {deliveryPager.pageItems.map((delivery) => (
                       <tr key={delivery.id}>
                         <td>
                           <strong>{delivery.serviceDate}</strong>
@@ -234,6 +238,16 @@ export default function BoxDetailPage({ params }) {
                 <span className="mono">sudo adbox-sync-now today</span>.
               </Empty>
             )}
+            <Pagination
+              page={deliveryPager.page}
+              totalPages={deliveryPager.totalPages}
+              onChange={deliveryPager.setPage}
+              totalItems={deliveries.length}
+              shownCount={deliveryPager.pageItems.length}
+              start={deliveryPager.start}
+              pageSize={deliveryPager.pageSize}
+              onPageSizeChange={deliveryPager.setPageSize}
+            />
             {latestSchedule && (
               <details style={{ marginTop: 16 }}>
                 <summary style={{ cursor: 'pointer', color: '#648f32', fontSize: 11 }}>
@@ -261,7 +275,7 @@ export default function BoxDetailPage({ params }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {playbackEvents.map((event) => (
+                  {playbackPager.pageItems.map((event) => (
                     <tr key={event.id}>
                       <td title={formatDateTime(event.startedAt)}>{formatRelative(event.startedAt)}</td>
                       <td>
@@ -286,6 +300,16 @@ export default function BoxDetailPage({ params }) {
               The agent buffers events locally and uploads them every two minutes.
             </Empty>
           )}
+          <Pagination
+            page={playbackPager.page}
+            totalPages={playbackPager.totalPages}
+            onChange={playbackPager.setPage}
+            totalItems={playbackEvents.length}
+            shownCount={playbackPager.pageItems.length}
+            start={playbackPager.start}
+            pageSize={playbackPager.pageSize}
+            onPageSizeChange={playbackPager.setPageSize}
+          />
         </Panel>
       )}
 
@@ -303,7 +327,7 @@ export default function BoxDetailPage({ params }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {errors.map((entry) => (
+                  {errorPager.pageItems.map((entry) => (
                     <tr key={entry.id}>
                       <td title={formatDateTime(entry.at)}>{formatRelative(entry.at)}</td>
                       <td>
@@ -324,6 +348,16 @@ export default function BoxDetailPage({ params }) {
               This box has not raised anything since its records were last pruned.
             </Empty>
           )}
+          <Pagination
+            page={errorPager.page}
+            totalPages={errorPager.totalPages}
+            onChange={errorPager.setPage}
+            totalItems={errors.length}
+            shownCount={errorPager.pageItems.length}
+            start={errorPager.start}
+            pageSize={errorPager.pageSize}
+            onPageSizeChange={errorPager.setPageSize}
+          />
         </Panel>
       )}
 

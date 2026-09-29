@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { api, formatDateTime, formatDuration, formatRelative, todayIso } from '../lib/api';
 import { Badge, Empty, ErrorState, Loading, Panel, Stat, useResource } from '../components/ui';
 import { SkeletonTelemetry } from '../components/Skeleton';
+import { Pagination, usePagination } from '../components/Pagination';
 
 const TABS = [
   ['playback', 'Playback'],
@@ -27,6 +28,9 @@ export default function TelemetryPage() {
     },
     [serviceDate]
   );
+  const playbackPager = usePagination(data?.playback?.events || [], 10);
+  const deliveryPager = usePagination(data?.deliveries || [], 10);
+  const errorPager = usePagination(data?.errors || [], 10);
 
   if (loading) return <SkeletonTelemetry />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
@@ -89,7 +93,7 @@ export default function TelemetryPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {data.playback.events.map((event) => (
+                      {playbackPager.pageItems.map((event) => (
                         <tr key={event.id}>
                           <td title={formatDateTime(event.startedAt)}>{formatRelative(event.startedAt)}</td>
                           <td>
@@ -105,6 +109,7 @@ export default function TelemetryPage() {
                           </td>
                           <td>
                             <Badge state={event.status}>{event.status}</Badge>
+                            {event.detail && <small>{event.detail}</small>}
                           </td>
                         </tr>
                       ))}
@@ -116,6 +121,16 @@ export default function TelemetryPage() {
                   Events upload every two minutes. Check the box's local console if a screen is definitely running.
                 </Empty>
               )}
+              <Pagination
+                page={playbackPager.page}
+                totalPages={playbackPager.totalPages}
+                onChange={playbackPager.setPage}
+                totalItems={data.playback.events.length}
+                shownCount={playbackPager.pageItems.length}
+                start={playbackPager.start}
+                pageSize={playbackPager.pageSize}
+                onPageSizeChange={playbackPager.setPageSize}
+              />
             </Panel>
           )}
 
@@ -135,7 +150,7 @@ export default function TelemetryPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {data.deliveries.map((delivery) => (
+                      {deliveryPager.pageItems.map((delivery) => (
                         <tr key={delivery.id}>
                           <td>
                             <Link href={`/fleet/${delivery.boxId}`}>
@@ -166,6 +181,16 @@ export default function TelemetryPage() {
                   Boxes fetch tomorrow's playlist from 23:00, and catch up on today's between midnight and 07:00.
                 </Empty>
               )}
+              <Pagination
+                page={deliveryPager.page}
+                totalPages={deliveryPager.totalPages}
+                onChange={deliveryPager.setPage}
+                totalItems={data.deliveries.length}
+                shownCount={deliveryPager.pageItems.length}
+                start={deliveryPager.start}
+                pageSize={deliveryPager.pageSize}
+                onPageSizeChange={deliveryPager.setPageSize}
+              />
             </Panel>
           )}
 
@@ -184,7 +209,7 @@ export default function TelemetryPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {data.errors.map((entry) => (
+                      {errorPager.pageItems.map((entry) => (
                         <tr key={entry.id}>
                           <td title={formatDateTime(entry.at)}>{formatRelative(entry.at)}</td>
                           <td>
@@ -208,6 +233,16 @@ export default function TelemetryPage() {
                   The whole fleet is healthy.
                 </Empty>
               )}
+              <Pagination
+                page={errorPager.page}
+                totalPages={errorPager.totalPages}
+                onChange={errorPager.setPage}
+                totalItems={data.errors.length}
+                shownCount={errorPager.pageItems.length}
+                start={errorPager.start}
+                pageSize={errorPager.pageSize}
+                onPageSizeChange={errorPager.setPageSize}
+              />
             </Panel>
           )}
     </>
