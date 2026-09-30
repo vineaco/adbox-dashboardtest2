@@ -215,8 +215,12 @@ pre.code { max-height: 340px; overflow: auto; margin: 10px 0 0; padding: 13px; b
 .media-card small { color: var(--ink-faint); font-size: 10px; }
 .media-card .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 11px 11px; }
 
+.map-wrap { position: relative; }
 .map { height: 440px; overflow: hidden; border: 1px solid #c5dde3; border-radius: 7px; z-index: 0; }
 .map.small { height: 260px; }
+.map-legend { position: absolute; z-index: 10; bottom: 12px; left: 12px; display: flex; gap: 12px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 7px; background: rgba(255, 255, 255, .92); backdrop-filter: blur(2px); box-shadow: 0 6px 18px rgba(31, 39, 30, .12); }
+.map-legend-item { display: flex; align-items: center; gap: 6px; color: var(--ink-soft); font-size: 11px; font-weight: 600; }
+.map-legend-item svg { display: block; flex: 0 0 auto; }
 
 .modal-backdrop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 22px; background: rgba(37, 42, 38, .46); }
 .modal { width: min(560px, 100%); max-height: calc(100vh - 44px); overflow: auto; padding: 24px; border: 1px solid var(--line); border-radius: 9px; background: var(--card); box-shadow: 0 22px 60px rgba(31, 39, 30, .22); }

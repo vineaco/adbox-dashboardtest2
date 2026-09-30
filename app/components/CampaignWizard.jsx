@@ -166,7 +166,7 @@ export default function CampaignWizard({ initial, campaignId, media, boundaries,
       };
       if (campaignId) await api.updateCampaign(campaignId, payload);
       else await api.createCampaign(payload);
-      router.push('/campaigns');
+      router.push(campaignId ? `/campaigns/${campaignId}` : '/campaigns');
       router.refresh();
     } catch (error) {
       notify(error.message, true);

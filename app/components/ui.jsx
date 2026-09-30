@@ -103,6 +103,37 @@ export function Modal({ title, description, onClose, className = '', wide = fals
   );
 }
 
+/** Confirm/cancel dialog for destructive or state-changing actions. */
+export function ConfirmModal({
+  title,
+  description,
+  confirmLabel = 'Confirm',
+  busyLabel = 'Working…',
+  cancelLabel = 'Cancel',
+  danger = false,
+  busy = false,
+  onConfirm,
+  onClose
+}) {
+  return (
+    <Modal title={title} description={description} onClose={() => !busy && onClose()}>
+      <div className="form-actions">
+        <button type="button" className="btn" onClick={onClose} disabled={busy}>
+          {cancelLabel}
+        </button>
+        <button
+          type="button"
+          className={`btn ${danger ? 'danger' : 'primary'}`}
+          onClick={onConfirm}
+          disabled={busy}
+        >
+          {busy ? busyLabel : confirmLabel}
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
 /** Small transient notification. Returns [node, notify]. */
 export function useToast() {
   const [toast, setToast] = useState(null);

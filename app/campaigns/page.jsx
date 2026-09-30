@@ -1,43 +1,30 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import { api } from '../lib/api';
-import { Badge, Empty, ErrorState, Loading, Panel, Stat, useResource, useToast } from '../components/ui';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { api, consumeFlash } from '../lib/api';
+import { Badge, Empty, ErrorState, Panel, Stat, useResource, useToast } from '../components/ui';
 import { Pagination, usePagination } from '../components/Pagination';
 import { SkeletonCampaigns } from '../components/Skeleton';
-import { ChartIcon, EditIcon, PauseIcon, PlayIcon, PlusIcon, RefreshIcon, SearchIcon, TrashIcon } from '../components/Icon';
+import { PlusIcon, RefreshIcon, SearchIcon } from '../components/Icon';
 import { DAY_NAMES, campaignCycleSeconds, formatAirtime } from '../lib/airtime';
 
 const STATUSES = ['all', 'draft', 'active', 'paused', 'archived'];
 
 export default function CampaignsPage() {
+  const router = useRouter();
   const [toastNode, notify] = useToast();
   const { loading, data, error, reload } = useResource(() => api.campaigns());
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [target, setTarget] = useState('all');
 
-  async function remove(campaign) {
-    if (!window.confirm(`Delete campaign “${campaign.name}”?`)) return;
-    try {
-      await api.deleteCampaign(campaign.id);
-      notify('Campaign deleted.');
-      reload();
-    } catch (deleteError) {
-      notify(deleteError.message, true);
-    }
-  }
-
-  async function toggleStatus(campaign) {
-    try {
-      await api.updateCampaign(campaign.id, { status: campaign.status === 'active' ? 'paused' : 'active' });
-      notify(campaign.status === 'active' ? 'Campaign paused.' : 'Campaign activated.');
-      reload();
-    } catch (updateError) {
-      notify(updateError.message, true);
-    }
-  }
+  useEffect(() => {
+    const flash = consumeFlash();
+    if (flash) notify(flash.message, flash.bad);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function triggerSync(campaign) {
     try {
@@ -182,12 +169,15 @@ export default function CampaignsPage() {
                         <th>Target</th>
                         <th className="numeric">Playlist</th>
                         <th className="numeric">Priority</th>
-                        <th />
                       </tr>
                     </thead>
                     <tbody>
                       {pageItems.map((campaign) => (
-                        <tr key={campaign.id}>
+                        <tr
+                          key={campaign.id}
+                          className="clickable"
+                          onClick={() => router.push(`/campaigns/${campaign.id}`)}
+                        >
                           <td>
                             <Link href={`/campaigns/${campaign.id}`}>
                               <strong>{campaign.name}</strong>
@@ -207,7 +197,10 @@ export default function CampaignsPage() {
                                   ? 'synced'
                                   : 'not-synced'
                               }`}
-                              onClick={() => triggerSync(campaign)}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                triggerSync(campaign);
+                              }}
                               title={
                                 campaign.status !== 'active'
                                   ? `Campaign is ${campaign.status}. Click to force sync bump.`
@@ -258,27 +251,6 @@ export default function CampaignsPage() {
                             <small>{formatAirtime(campaignCycleSeconds(campaign))} / pass</small>
                           </td>
                           <td className="numeric">{campaign.priority}</td>
-                          <td>
-                            <div className="row-actions">
-                              <Link className="btn tiny" href={`/campaigns/${campaign.id}/metrics`} title="Metrics">
-                                <ChartIcon /> Metrics
-                              </Link>
-                              <button
-                                className="btn tiny"
-                                onClick={() => toggleStatus(campaign)}
-                                title={campaign.status === 'active' ? 'Pause' : 'Activate'}
-                              >
-                                {campaign.status === 'active' ? <PauseIcon /> : <PlayIcon />}
-                                {campaign.status === 'active' ? 'Pause' : 'Activate'}
-                              </button>
-                              <Link className="btn tiny" href={`/campaigns/${campaign.id}`} title="Edit">
-                                <EditIcon /> Edit
-                              </Link>
-                              <button className="btn tiny danger" onClick={() => remove(campaign)} title="Delete">
-                                <TrashIcon /> Delete
-                              </button>
-                            </div>
-                          </td>
                         </tr>
                       ))}
                     </tbody>
