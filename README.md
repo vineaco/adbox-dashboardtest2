@@ -35,8 +35,10 @@ by hand.
 | `/fleet` | Every registered box, searchable, with connectivity and last known position. |
 | `/fleet/[id]` | One box in depth — map, hardware, **schedule preview** (a dry run of the resolver for any date), delivery history with raw payloads, proof of play, errors, and settings including API key rotation. |
 | `/provisioning` | Issue and revoke single-use codes, with the exact installer command to run on the Pi. |
-| `/campaigns` | Create and edit campaigns: playlist, date range, days of week, daily window, priority and target (boundary, specific boxes, or the whole fleet). |
-| `/media` | Upload images and video, set default durations, delete unused items. Duplicate uploads are detected by checksum. |
+| `/campaigns` | Overview cards and a paginated, filterable list. Each row has a **Sync** pill: green `Synced (n)` means n boxes collected it today, amber `Not synced` means none yet. Clicking the pill asks boxes to pick it up on their next 10-minute check. |
+| `/campaigns/new`, `/campaigns/[id]` | The campaign wizard: playlist, dayparts, date range, priority and target (a country → state → city → zone boundary picker, specific boxes, or the whole fleet). Every ad shows a panel-fit badge, and files that would break a box (over 1920 × 1080 or 15 MB) block saving. |
+| `/campaigns/[id]/metrics` | Every play of a campaign: box, start and end time, duration, GPS fix and, for multi-screen boxes, which screen. Plus totals and an expected-impressions estimate. |
+| `/media` | Upload images and video, set default durations, delete unused items. Files are checked in the browser before upload against the 128 × 128 panel (aspect ratio, resolution, size), and each item shows a fit badge. Duplicate uploads are detected by checksum. |
 | `/boundaries` | Draw polygon or radius boundaries on a map. These are what geo-targeted campaigns match against. |
 | `/telemetry` | Playback, schedule deliveries and errors across the fleet, filtered by service date. |
 
@@ -50,6 +52,11 @@ returns. It runs the same code path as the device endpoint.
 
 **Empty deliveries are flagged.** A delivery with `0` items is shown as a
 warning badge rather than a zero, because it means a box asked and got nothing.
+
+**Design ads for the panel.** Screens are 128 × 128 LED panels. Square,
+high-contrast art with thick lines reads well. 16:9 artwork gets squashed, and
+small text blurs. The fit badges in the media library and campaign wizard flag
+this before an ad reaches a screen.
 
 **Fallback positions are visible.** A box with no GPS fix that is using
 configured coordinates is tagged `fallback` everywhere its position appears, so
